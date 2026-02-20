@@ -1288,10 +1288,7 @@
             const text = geminiInput.value.trim();
             if (!text || isGenerating) return;
 
-            if (!API_KEY) {
-                showApiKeyModal();
-                return;
-            }
+            if (!API_KEY) return;
 
             // Clear welcome screen
             const welcome = document.querySelector('.gemini-welcome');
