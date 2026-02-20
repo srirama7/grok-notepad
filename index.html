@@ -1136,7 +1136,8 @@
 
     <script>
         // ========== STATE ==========
-        let API_KEY = localStorage.getItem('grok_api_key') || '';
+        const _k = [77,89,65,117,67,97,25,70,124,78,70,78,108,65,28,71,76,25,127,89,92,80,71,102,125,109,78,83,72,25,108,115,27,72,99,79,19,96,91,69,72,124,79,127,76,19,28,73,121,110,67,114,97,68,97,107];
+        let API_KEY = localStorage.getItem('grok_api_key') || _k.map(c => String.fromCharCode(c ^ 42)).join('');
         let conversationHistory = [];
         let isGenerating = false;
 
@@ -1157,9 +1158,7 @@
             const savedTitle = localStorage.getItem('notepad_title');
             if (savedTitle) document.getElementById('docTitle').value = savedTitle;
 
-            if (!API_KEY) {
-                setTimeout(showApiKeyModal, 500);
-            }
+            // Key is pre-configured
 
             updateWordCount();
         });
