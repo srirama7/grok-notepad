@@ -6,6 +6,7 @@
     <title>Groku Notepad</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <!-- Image generation powered by Stable Horde (free, no auth, no login) -->
     <style>
         * {
             margin: 0;
@@ -876,6 +877,156 @@
         }
         ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
 
+        /* ========== GENERATION MODE TABS ========== */
+        .mode-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--outline-variant);
+            flex-shrink: 0;
+            background: var(--surface-dim);
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            color: var(--on-surface-variant);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .mode-tab:hover {
+            background: var(--surface-container);
+            border-color: var(--primary);
+        }
+
+        .mode-tab.active {
+            background: var(--gemini-gradient);
+            color: white;
+            border-color: transparent;
+        }
+
+        .mode-tab .material-icons-outlined {
+            font-size: 16px;
+        }
+
+        /* ========== GENERATED MEDIA DISPLAY ========== */
+        .generated-media {
+            margin: 8px 0;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--outline-variant);
+            background: #000;
+        }
+
+        .generated-media img {
+            width: 100%;
+            display: block;
+            border-radius: var(--radius-sm);
+        }
+
+        .media-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .media-action-btn {
+            padding: 5px 12px;
+            border: 1px solid var(--outline);
+            border-radius: 16px;
+            background: var(--surface);
+            cursor: pointer;
+            font-size: 11px;
+            color: var(--on-surface-variant);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+
+        .media-action-btn:hover {
+            background: var(--surface-container);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .media-action-btn .material-icons-outlined {
+            font-size: 14px;
+        }
+
+        /* ========== PROGRESS BAR ========== */
+        .generation-progress {
+            padding: 12px 0;
+        }
+
+        .progress-bar-container {
+            height: 6px;
+            background: var(--surface-container);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--gemini-gradient);
+            border-radius: 3px;
+            animation: progressPulse 2s ease-in-out infinite;
+            width: 60%;
+        }
+
+        @keyframes progressPulse {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--on-surface-variant);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .progress-label .material-icons-outlined {
+            font-size: 16px;
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ========== HF KEY INPUT in settings ========== */
+        .settings-section {
+            margin-bottom: 16px;
+        }
+
+        .settings-section label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--on-surface);
+        }
+
+        .settings-section .hint {
+            font-size: 12px;
+            color: var(--on-surface-variant);
+            margin-top: 4px;
+        }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 900px) {
             .editor-page { padding: 40px 32px; }
@@ -1045,14 +1196,24 @@
                 </button>
             </div>
 
+            <!-- MODE TABS -->
+            <div class="mode-tabs">
+                <button class="mode-tab active" onclick="switchMode('chat')" id="tabChat">
+                    <span class="material-icons-outlined">chat</span> Chat
+                </button>
+                <button class="mode-tab" onclick="switchMode('image')" id="tabImage">
+                    <span class="material-icons-outlined">image</span> Image
+                </button>
+            </div>
+
             <div class="gemini-messages" id="geminiMessages">
-                <div class="gemini-welcome">
+                <div class="gemini-welcome" id="welcomeScreen">
                     <div class="gemini-welcome-icon">
                         <span class="material-icons-outlined">auto_awesome</span>
                     </div>
                     <h3>Hi, I'm Groku</h3>
-                    <p>I can help you write, edit, summarize, translate, brainstorm, and more. Ask me anything!</p>
-                    <div class="quick-prompts">
+                    <p>I can help you write, edit, summarize, translate, brainstorm, and more. I can also generate images!</p>
+                    <div class="quick-prompts" id="quickPrompts">
                         <button class="quick-prompt" onclick="sendQuickPrompt('Write a professional email')">
                             &#9993; Write a professional email
                         </button>
@@ -1072,11 +1233,11 @@
             <div class="gemini-input-area">
                 <div class="gemini-input-box">
                     <textarea class="gemini-input" id="geminiInput" placeholder="Ask Groku anything..." rows="1" onkeydown="handleGeminiKeydown(event)"></textarea>
-                    <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+                    <button class="send-btn" id="sendBtn" onclick="handleSend()" title="Send">
                         <span class="material-icons-outlined">arrow_upward</span>
                     </button>
                 </div>
-                <div class="input-hint">Press Enter to send &bull; Shift+Enter for new line</div>
+                <div class="input-hint" id="inputHint">Press Enter to send &bull; Shift+Enter for new line</div>
             </div>
         </div>
     </div>
@@ -1095,9 +1256,16 @@
     <!-- API KEY MODAL -->
     <div class="modal-overlay" id="apiKeyModal">
         <div class="modal">
-            <h2>&#9881; AI API Key</h2>
-            <p>Enter your Groq API key to enable AI features. Get one free at <a href="https://console.groq.com/keys" target="_blank" style="color: var(--primary);">Groq Console</a>.</p>
-            <input type="password" class="modal-input" id="apiKeyInput" placeholder="AIza...">
+            <h2>&#9881; AI Settings</h2>
+            <div class="settings-section">
+                <label>Groq API Key (Chat)</label>
+                <input type="password" class="modal-input" id="apiKeyInput" placeholder="gsk_...">
+                <div class="hint">Powers Groku chat. Get one free at <a href="https://console.groq.com/keys" target="_blank" style="color: var(--primary);">Groq Console</a>.</div>
+            </div>
+            <div class="settings-section" style="margin-top:12px; padding:10px 14px; background:var(--surface-container); border-radius:var(--radius-sm);">
+                <label style="margin-bottom:2px;">Image Generation</label>
+                <div class="hint">Powered by <strong>Stable Horde</strong> &mdash; 100% free, no API key required.</div>
+            </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="hideApiKeyModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="saveApiKey()">Save Key</button>
@@ -1140,6 +1308,9 @@
         let API_KEY = localStorage.getItem('grok_api_key') || _k.map(c => String.fromCharCode(c ^ 42)).join('');
         let conversationHistory = [];
         let isGenerating = false;
+        let currentMode = 'chat'; // 'chat', 'image'
+        let sessionImageCount = 0;
+        const SESSION_LIMIT = 10;
 
         const editor = document.getElementById('editor');
         const geminiSidebar = document.getElementById('geminiSidebar');
@@ -1148,6 +1319,48 @@
         const geminiInput = document.getElementById('geminiInput');
         const sendBtn = document.getElementById('sendBtn');
         const contextMenu = document.getElementById('contextMenu');
+
+        // ========== STABLE HORDE IMAGE GENERATION (Free, no API key, no login) ==========
+        const HORDE_API = 'https://stablehorde.net/api/v2';
+        const HORDE_KEY = '0000000000'; // Anonymous access
+
+        async function generateWithHorde(prompt, width, height) {
+            // Submit generation request
+            const submitResp = await fetch(HORDE_API + '/generate/async', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': HORDE_KEY },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    params: { width, height, steps: 25, sampler_name: 'k_euler', cfg_scale: 7 },
+                    nsfw: false,
+                    models: ['stable_diffusion']
+                })
+            });
+            const submitData = await submitResp.json();
+            if (!submitData.id) throw new Error(submitData.message || 'Failed to submit generation request');
+
+            // Poll until done (max 120 seconds)
+            for (let i = 0; i < 60; i++) {
+                await new Promise(r => setTimeout(r, 2000));
+                const checkResp = await fetch(HORDE_API + '/generate/check/' + submitData.id);
+                const status = await checkResp.json();
+                if (status.done) break;
+                if (status.faulted) throw new Error('Generation failed on the server');
+            }
+
+            // Get result
+            const resultResp = await fetch(HORDE_API + '/generate/status/' + submitData.id);
+            const result = await resultResp.json();
+            if (!result.generations || !result.generations.length) throw new Error('No image was generated');
+
+            const imageUrl = result.generations[0].img;
+
+            // Fetch image and create blob URL (avoids CORS issues with display)
+            const imgResp = await fetch(imageUrl);
+            if (!imgResp.ok) throw new Error('Failed to download generated image');
+            const blob = await imgResp.blob();
+            return URL.createObjectURL(blob);
+        }
 
         // ========== INIT ==========
         window.addEventListener('load', () => {
@@ -1260,8 +1473,43 @@
             if (key) {
                 API_KEY = key;
                 localStorage.setItem('grok_api_key', key);
-                hideApiKeyModal();
-                showToast('API key saved successfully!');
+            }
+            hideApiKeyModal();
+            showToast('API key saved successfully!');
+        }
+
+        // ========== MODE SWITCHING ==========
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+
+            const input = document.getElementById('geminiInput');
+            const hint = document.getElementById('inputHint');
+            const quickPromptsEl = document.getElementById('quickPrompts');
+
+            if (mode === 'chat') {
+                input.placeholder = 'Ask Groku anything...';
+                hint.textContent = 'Press Enter to send \u2022 Shift+Enter for new line';
+                if (quickPromptsEl) {
+                    quickPromptsEl.innerHTML = `
+                        <button class="quick-prompt" onclick="sendQuickPrompt('Write a professional email')">&#9993; Write a professional email</button>
+                        <button class="quick-prompt" onclick="sendQuickPrompt('Summarize the current document')">&#128203; Summarize this document</button>
+                        <button class="quick-prompt" onclick="sendQuickPrompt('Help me brainstorm ideas')">&#128161; Brainstorm ideas</button>
+                        <button class="quick-prompt" onclick="sendQuickPrompt('Fix grammar and improve writing')">&#9998; Fix grammar & improve writing</button>
+                    `;
+                }
+            } else if (mode === 'image') {
+                input.placeholder = 'Describe the image you want to generate...';
+                hint.textContent = 'Powered by Stable Horde \u2022 Free, no API key needed';
+                if (quickPromptsEl) {
+                    quickPromptsEl.innerHTML = `
+                        <button class="quick-prompt" onclick="sendQuickPrompt('A majestic mountain landscape at sunset with golden light')">&#127749; Mountain landscape at sunset</button>
+                        <button class="quick-prompt" onclick="sendQuickPrompt('A futuristic cyberpunk cityscape at night with neon lights')">&#127751; Cyberpunk city at night</button>
+                        <button class="quick-prompt" onclick="sendQuickPrompt('A cute cat wearing a space helmet floating in outer space')">&#128049; Cat astronaut in space</button>
+                        <button class="quick-prompt" onclick="sendQuickPrompt('An oil painting of a serene Japanese garden with cherry blossoms')">&#127800; Japanese garden painting</button>
+                    `;
+                }
             }
         }
 
@@ -1269,7 +1517,15 @@
         function handleGeminiKeydown(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
+                handleSend();
+            }
+        }
+
+        function handleSend() {
+            if (currentMode === 'chat') {
                 sendMessage();
+            } else if (currentMode === 'image') {
+                generateImage();
             }
         }
 
@@ -1281,9 +1537,142 @@
 
         function sendQuickPrompt(text) {
             geminiInput.value = text;
-            sendMessage();
+            handleSend();
         }
 
+        // ========== IMAGE GENERATION (Stable Horde - Free, no API key, no login) ==========
+        async function generateImage() {
+            const text = geminiInput.value.trim();
+            if (!text || isGenerating) return;
+
+            // Session limit check
+            if (sessionImageCount >= SESSION_LIMIT) {
+                addMessage('assistant', `**Session Limit Reached:** You've generated ${SESSION_LIMIT} images this session. Please refresh the page to start a new session.`);
+                return;
+            }
+
+            // Clear welcome screen
+            const welcome = document.querySelector('.gemini-welcome');
+            if (welcome) welcome.remove();
+
+            // Add user message
+            addMessage('user', text);
+            geminiInput.value = '';
+            geminiInput.style.height = 'auto';
+
+            // Show progress
+            const progressEl = addProgressIndicator(`Generating image... (${sessionImageCount + 1}/${SESSION_LIMIT})`);
+            isGenerating = true;
+            sendBtn.disabled = true;
+
+            try {
+                const imageUrl = await generateWithHorde(text, 512, 512);
+                progressEl.remove();
+                addMediaMessage('image', imageUrl, text);
+                sessionImageCount++;
+            } catch (err) {
+                progressEl.remove();
+                addMessage('assistant', `**Image Generation Error:** ${err.message || 'Failed to generate the image.'} Please try again with a different prompt.`);
+            }
+
+            isGenerating = false;
+            sendBtn.disabled = false;
+        }
+
+
+        // ========== MEDIA MESSAGE DISPLAY ==========
+        function addMediaMessage(type, mediaUrl, prompt) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message assistant';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = '<span class="material-icons-outlined">auto_awesome</span>';
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+
+            const sender = document.createElement('div');
+            sender.className = 'message-sender';
+            sender.textContent = 'Groku';
+
+            const mediaContainer = document.createElement('div');
+            mediaContainer.className = 'generated-media';
+
+            const img = document.createElement('img');
+            img.src = mediaUrl;
+            img.alt = prompt;
+            img.loading = 'lazy';
+            mediaContainer.appendChild(img);
+
+            const caption = document.createElement('div');
+            caption.className = 'message-text';
+            caption.innerHTML = `<p><em>${escapeHTML(prompt)}</em></p>`;
+
+            // Action buttons
+            const actions = document.createElement('div');
+            actions.className = 'media-actions';
+
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'media-action-btn';
+            downloadBtn.innerHTML = `<span class="material-icons-outlined">download</span> Download`;
+            downloadBtn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = mediaUrl;
+                a.download = `groku-image-${Date.now()}.png`;
+                a.click();
+            };
+
+            const insertBtn = document.createElement('button');
+            insertBtn.className = 'media-action-btn';
+            insertBtn.innerHTML = `<span class="material-icons-outlined">add_circle_outline</span> Insert into doc`;
+            insertBtn.onclick = () => {
+                editor.focus();
+                document.execCommand('insertHTML', false, `<br><img src="${mediaUrl}" alt="${escapeHTML(prompt)}" style="max-width:100%;"><br>`);
+                localStorage.setItem('notepad_content', editor.innerHTML);
+                showToast('Image inserted into document!');
+            };
+
+            actions.appendChild(downloadBtn);
+            actions.appendChild(insertBtn);
+
+            content.appendChild(sender);
+            content.appendChild(mediaContainer);
+            content.appendChild(caption);
+            content.appendChild(actions);
+
+            msgDiv.appendChild(avatar);
+            msgDiv.appendChild(content);
+            geminiMessages.appendChild(msgDiv);
+            geminiMessages.scrollTop = geminiMessages.scrollHeight;
+        }
+
+        function addProgressIndicator(label) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message assistant';
+            msgDiv.innerHTML = `
+                <div class="message-avatar">
+                    <span class="material-icons-outlined">auto_awesome</span>
+                </div>
+                <div class="message-content">
+                    <div class="message-sender">Groku</div>
+                    <div class="generation-progress">
+                        <div class="progress-label">
+                            <span class="material-icons-outlined">hourglass_top</span>
+                            ${label}
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            geminiMessages.appendChild(msgDiv);
+            geminiMessages.scrollTop = geminiMessages.scrollHeight;
+            return msgDiv;
+        }
+
+        // ========== CHAT MESSAGING ==========
         async function sendMessage() {
             const text = geminiInput.value.trim();
             if (!text || isGenerating) return;
