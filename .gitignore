@@ -1,0 +1,23 @@
+# Test screenshots
+*-test*.png
+*-mode.png
+pres-test-*.png
+spreadsheet-test-*.png
+video-*.png
+no-popup-test.png
+final-test.png
+groku-*.png
+excel-insert-tab.png
+pres-final-state.png
+document-mode.png
+presentation-mode.png
+
+# Backups
+*.bak
+*.backup
+
+# Playwright
+.playwright-mcp/
+
+# Misc
+figma-snapshot.md
